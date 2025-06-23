@@ -1,0 +1,91 @@
+<!-- index.html gabungan lengkap (admin kontrol produk + tampil ke umum) --><!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyru Store</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 1rem;
+    }
+    header {
+      background-color: #7f5af0;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 0 0 10px 10px;
+    }
+    h1 {
+      margin: 0;
+    }
+    .produk-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .produk-item {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      padding: 1rem;
+      text-align: center;
+    }
+    .produk-item h3 {
+      margin: 0.5rem 0;
+    }
+    .produk-item p {
+      margin: 0.3rem 0;
+    }
+    .produk-item button {
+      background: #2cb67d;
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .produk-item button:hover {
+      background: #239764;
+    }
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cyru Store - Produk Kami</h1>
+  </header>  <section class="produk-container" id="produkList">
+    <!-- Produk akan ditampilkan di sini -->
+  </section>  <footer>
+    &copy; 2025 Cyru Store. All rights reserved.
+  </footer>  <script>
+    const produkContainer = document.getElementById("produkList");
+    const produkList = JSON.parse(localStorage.getItem("produkCyruStore")) || [];
+
+    if (produkList.length === 0) {
+      produkContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Belum ada produk tersedia.</p>';
+    } else {
+      produkList.forEach((produk) => {
+        const produkCard = document.createElement("div");
+        produkCard.className = "produk-item";
+        produkCard.innerHTML = `
+          <h3>${produk.nama}</h3>
+          <p>Kategori: ${produk.kategori}</p>
+          <p>Harga: Rp ${parseInt(produk.harga).toLocaleString()}</p>
+          <button onclick="location.href='https://wa.me/6281234567890?text=Halo%20saya%20ingin%20membeli%20${encodeURIComponent(produk.nama)}'">
+            Beli Sekarang
+          </button>
+        `;
+        produkContainer.appendChild(produkCard);
+      });
+    }
+  </script></body>
+</html>
