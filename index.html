@@ -1,91 +1,141 @@
-<!-- index.html gabungan lengkap (admin kontrol produk + tampil ke umum) --><!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyru Store</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Cyru Store</title>
   <style>
+    :root {
+      --primary: #7f5af0;
+      --secondary: #2cb67d;
+      --bg: #0f0e17;
+      --accent: #ff8906;
+      --glass: rgba(255, 255, 255, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f5f5f5;
-      color: #333;
-      padding: 1rem;
-    }
-    header {
-      background-color: #7f5af0;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       color: white;
-      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .login-box {
+      background: var(--bg);
+      padding: 40px;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      animation: fadeIn 1s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-box h2 {
       text-align: center;
-      border-radius: 0 0 10px 10px;
+      margin-bottom: 25px;
+      letter-spacing: 1px;
     }
-    h1 {
-      margin: 0;
-    }
-    .produk-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-    .produk-item {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      padding: 1rem;
-      text-align: center;
-    }
-    .produk-item h3 {
-      margin: 0.5rem 0;
-    }
-    .produk-item p {
-      margin: 0.3rem 0;
-    }
-    .produk-item button {
-      background: #2cb67d;
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin: 12px 0;
       border: none;
+      border-radius: 10px;
+      background: var(--glass);
       color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    input::placeholder {
+      color: #bbb;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
-    .produk-item button:hover {
-      background: #239764;
+
+    button:hover {
+      background: #f25f4c;
     }
-    footer {
-      margin-top: 3rem;
+
+    .logo {
+      width: 80px;
+      margin: 0 auto 20px;
+      display: block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .note {
       text-align: center;
-      font-size: 0.9rem;
-      color: #777;
+      font-size: 12px;
+      margin-top: 15px;
+      opacity: 0.6;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Cyru Store - Produk Kami</h1>
-  </header>  <section class="produk-container" id="produkList">
-    <!-- Produk akan ditampilkan di sini -->
-  </section>  <footer>
-    &copy; 2025 Cyru Store. All rights reserved.
-  </footer>  <script>
-    const produkContainer = document.getElementById("produkList");
-    const produkList = JSON.parse(localStorage.getItem("produkCyruStore")) || [];
+  <div class="login-box">
+    <!-- <img src="cyru-logo.png" alt="Cyru Store" class="logo"> -->
+    <h2>Masuk ke Cyru Store</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Masuk</button>
+    <div class="note">Akses aman terenkripsi. Selamat datang kembali ✨</div>
+  </div>
 
-    if (produkList.length === 0) {
-      produkContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Belum ada produk tersedia.</p>';
-    } else {
-      produkList.forEach((produk) => {
-        const produkCard = document.createElement("div");
-        produkCard.className = "produk-item";
-        produkCard.innerHTML = `
-          <h3>${produk.nama}</h3>
-          <p>Kategori: ${produk.kategori}</p>
-          <p>Harga: Rp ${parseInt(produk.harga).toLocaleString()}</p>
-          <button onclick="location.href='https://wa.me/6281234567890?text=Halo%20saya%20ingin%20membeli%20${encodeURIComponent(produk.nama)}'">
-            Beli Sekarang
-          </button>
-        `;
-        produkContainer.appendChild(produkCard);
-      });
+  <script>
+    const ADMIN_USERNAME = "cyru";
+    const ADMIN_PASSWORD = "cyrugans";
+
+    function login() {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+
+      if (!user || !pass) {
+        alert("Isi semua kolom terlebih dahulu.");
+        return;
+      }
+
+      if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+        localStorage.setItem("adminLoggedIn", "true");
+        window.location.href = "admin.html";
+      } else {
+        localStorage.setItem("loggedIn", "true");
+        localStorage.setItem("username", user);
+        window.location.href = "beranda.html";
+      }
     }
-  </script></body>
+  </script>
+</body>
 </html>
