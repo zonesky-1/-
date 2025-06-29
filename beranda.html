@@ -1,37 +1,32 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Beranda - Cyru Store</title>
   <style>
     body {
-      background-color: #ffffff;
-      color: #333;
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 20px;
+      transition: background 0.3s, color 0.3s;
     }
     h1, h2 {
       text-align: center;
-      color: #222;
     }
     .kategori {
-      background-color: #f5f5f5;
+      background-color: var(--box-bg);
       border-radius: 12px;
       padding: 15px;
       margin-bottom: 30px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .layanan-item {
-      position: relative;
       margin: 10px 0;
       padding: 15px;
-      background: #eaeaea;
+      background: var(--item-bg);
       border-radius: 10px;
-      color: #111;
-      cursor: pointer;
-      overflow: hidden;
+      color: var(--text-color);
       transition: transform 0.1s ease;
     }
     .layanan-item:hover {
@@ -39,38 +34,76 @@
     }
     .layanan-item img, .layanan-item video {
       max-width: 100%;
-      height: auto;
       border-radius: 10px;
       margin-top: 10px;
     }
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      transform: scale(0);
-      animation: ripple-animation 0.5s linear;
-      background-color: rgba(0, 0, 0, 0.2);
-      pointer-events: none;
+    .order-form {
+      margin-top: 10px;
     }
-    @keyframes ripple-animation {
-      to {
-        transform: scale(4);
-        opacity: 0;
-      }
+    .order-form input, .order-form textarea {
+      width: 100%;
+      margin: 6px 0;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .order-btn {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background-color: #2cb67d;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.3s;
+    }
+    .order-btn:hover {
+      background-color: #1e9e6f;
     }
     .loading {
       text-align: center;
       color: #888;
       margin-top: 30px;
     }
+
+    :root {
+      --bg: #ffffff;
+      --text-color: #111;
+      --box-bg: #f5f5f5;
+      --item-bg: #eaeaea;
+    }
+    body.dark {
+      --bg: #1a1a1a;
+      --text-color: #eee;
+      --box-bg: #262626;
+      --item-bg: #333;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-color);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
   </style>
 </head>
 <body>
   <h1>Selamat Datang di Cyru Store</h1>
-  <h2>Daftar Layanan</h2>
+  <h2 id="scrollTarget">Daftar Layanan</h2>
   <div id="layanan-container"></div>
   <div class="loading" id="loading">Memuat layanan...</div>
 
   <script>
+    const hour = new Date().getHours();
+    if (hour >= 18 || hour < 6) {
+      document.body.classList.add('dark');
+    }
+
     async function loadLayanan() {
       const response = await fetch('https://api.sheetbest.com/sheets/a5f0fdbf-c847-4094-a937-d4fb70b65366');
       const data = await response.json();
@@ -104,27 +137,40 @@
             }
           }
 
+          const nomor = '6283896918923'; // GANTI DENGAN NOMOR WHATSAPP KAMU
           layananDiv.innerHTML = `
             <strong>${item.nama}</strong><br>
             Rp${parseInt(item.harga).toLocaleString()}
             ${mediaContent}
+            <form class="order-form" onsubmit="return kirimPesan(this, '${item.nama}', ${item.harga}, '${nomor}')">
+              <input type="text" name="nama" placeholder="Nama Anda" required />
+              <textarea name="catatan" placeholder="Catatan tambahan..."></textarea>
+              <button type="submit" class="order-btn">Pesan Sekarang via WhatsApp</button>
+            </form>
           `;
-
-          layananDiv.addEventListener('click', function (e) {
-            const circle = document.createElement('span');
-            circle.classList.add('ripple');
-            const rect = layananDiv.getBoundingClientRect();
-            circle.style.left = `${e.clientX - rect.left}px`;
-            circle.style.top = `${e.clientY - rect.top}px`;
-            layananDiv.appendChild(circle);
-            setTimeout(() => circle.remove(), 600);
-          });
 
           kategoriDiv.appendChild(layananDiv);
         });
 
         container.appendChild(kategoriDiv);
       }
+
+      document.getElementById('scrollTarget').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function kirimPesan(form, layanan, harga, nomor) {
+      const nama = form.nama.value.trim();
+      const catatan = form.catatan.value.trim();
+      if (!nama) {
+        alert("Mohon isi nama terlebih dahulu.");
+        return false;
+      }
+
+      const pesan = `Halo, saya *${nama}* ingin memesan layanan *${layanan}* seharga Rp${parseInt(harga).toLocaleString()}.\n\nCatatan: ${catatan || '-'}`;
+      const encoded = encodeURIComponent(pesan);
+      const link = `https://wa.me/${nomor}?text=${encoded}`;
+      window.open(link, '_blank');
+      return false;
     }
 
     loadLayanan();
