@@ -37,7 +37,7 @@
     .layanan-item:hover {
       transform: scale(1.01);
     }
-    .layanan-item img {
+    .layanan-item img, .layanan-item video {
       max-width: 100%;
       height: auto;
       border-radius: 10px;
@@ -94,13 +94,22 @@
         grouped[kategori].forEach(item => {
           const layananDiv = document.createElement('div');
           layananDiv.classList.add('layanan-item');
+
+          let mediaContent = '';
+          if (item.gambar) {
+            if (item.gambar.endsWith('.mp4')) {
+              mediaContent = `<video controls><source src="${item.gambar}" type="video/mp4">Browser tidak mendukung video.</video>`;
+            } else {
+              mediaContent = `<img src="${item.gambar}" alt="${item.nama}">`;
+            }
+          }
+
           layananDiv.innerHTML = `
             <strong>${item.nama}</strong><br>
             Rp${parseInt(item.harga).toLocaleString()}
-            ${item.gambar ? `<img src="${item.gambar}" alt="${item.nama}">` : ''}
+            ${mediaContent}
           `;
 
-          // Tambah efek ripple saat klik
           layananDiv.addEventListener('click', function (e) {
             const circle = document.createElement('span');
             circle.classList.add('ripple');
