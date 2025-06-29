@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Kelola Layanan</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #7f5af0, #2cb67d);
+      color: white;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #0f0e17dd;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: none;
+    }
+    input {
+      background: #f0f0f0;
+      color: #000;
+    }
+    button {
+      background: #ff8906;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .reset-button {
+      background: gray;
+    }
+    .status {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .service-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .service-details {
+      flex: 1;
+    }
+    .service-details img {
+      max-width: 100px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    .actions button {
+      margin: 5px 5px 0 0;
+      background: #f25f4c;
+    }
+    .actions button:hover {
+      background: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Tambah / Edit Layanan Cyru Store</h2>
+    <input type="text" id="id" placeholder="ID Layanan (misal: RAFFIRAS)" />
+    <input type="text" id="kategori" placeholder="Kategori (misal: Panel-Privat)" required />
+    <input type="text" id="nama" placeholder="Nama Layanan" required />
+    <input type="number" id="harga" placeholder="Harga (misal: 10000)" required />
+    <input type="text" id="gambar" placeholder="URL Gambar (opsional)" />
+    <button onclick="kirimData()" id="mainBtn">Tambah Layanan</button>
+    <button onclick="resetForm()" class="reset-button">Batal</button>
+    <div class="status" id="status"></div>
+
+    <div class="service-list" id="serviceList">
+      <h2 style="margin-top: 30px;">Daftar Layanan</h2>
+    </div>
+  </div>
+
+  <script>
+    const SHEET_URL = 'https://api.sheetbest.com/sheets/a5f0fdbf-c847-4094-a937-d4fb70b65366';
+    let editMode = false;
+    let editId = null;
+
+    // Validasi login admin
+    if (localStorage.getItem("adminLoggedIn") !== "true") {
+      alert("Akses ditolak! Silakan login sebagai admin.");
+      window.location.href = "login.html";
+    }
+
+    async function kirimData() {
+      const id = document.getElementById('id').value.trim() || Date.now().toString();
+      const kategori = document.getElementById('kategori').value.trim();
+      const nama = document.getElementById('nama').value.trim();
+      const harga = document.getElementById('harga').value.trim();
+      const gambar = document.getElementById('gambar').value.trim();
+      const data = { id, kategori, nama, harga, gambar };
+
+      if (!kategori || !nama || !harga) {
+        document.getElementById('status').innerText = 'Mohon lengkapi data wajib.';
+        return;
+      }
+
+      try {
+        if (editMode && editId) {
+          const res = await fetch(`${SHEET_URL}?id=${encodeURIComponent(editId)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (res.ok) {
+            document.getElementById('status').innerText = 'Layanan diperbarui!';
+          } else {
+            document.getElementById('status').innerText = 'Gagal update.';
+          }
+        } else {
+          const res = await fetch(SHEET_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          if (res.ok) {
+            document.getElementById('status').innerText = 'Layanan ditambahkan!';
+          } else {
+            document.getElementById('status').innerText = 'Gagal menambah layanan.';
+          }
+        }
+        resetForm();
+        loadData();
+      } catch (err) {
+        document.getElementById('status').innerText = 'Terjadi kesalahan.';
+      }
+    }
+
+    function editLayanan(item) {
+      document.getElementById('id').value = item.id;
+      document.getElementById('kategori').value = item.kategori;
+      document.getElementById('nama').value = item.nama;
+      document.getElementById('harga').value = item.harga;
+      document.getElementById('gambar').value = item.gambar;
+      document.getElementById('mainBtn').innerText = "Simpan Perubahan";
+      document.getElementById('status').innerText = `Sedang mengedit ID: ${item.id}`;
+      editMode = true;
+      editId = item.id;
+    }
+
+    function resetForm() {
+      document.getElementById('id').value = '';
+      document.getElementById('kategori').value = '';
+      document.getElementById('nama').value = '';
+      document.getElementById('harga').value = '';
+      document.getElementById('gambar').value = '';
+      document.getElementById('mainBtn').innerText = "Tambah Layanan";
+      document.getElementById('status').innerText = '';
+      editMode = false;
+      editId = null;
+    }
+
+    async function hapusLayanan(id) {
+      if (!confirm("Hapus layanan ini?")) return;
+      try {
+        const res = await fetch(`${SHEET_URL}?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          alert("Berhasil dihapus!");
+          loadData();
+        } else {
+          alert("Gagal menghapus.");
+        }
+      } catch {
+        alert("Kesalahan jaringan.");
+      }
+    }
+
+    async function loadData() {
+      const list = document.getElementById('serviceList');
+      list.innerHTML = '<h2>Daftar Layanan</h2>';
+      try {
+        const res = await fetch(SHEET_URL);
+        const data = await res.json();
+        if (data.length === 0) {
+          list.innerHTML += '<p>Belum ada layanan.</p>';
+          return;
+        }
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'service-item';
+          div.innerHTML = `
+            <div class="service-details">
+              <strong>${item.kategori}</strong><br>
+              ${item.nama} - Rp${item.harga}<br>
+              ${item.gambar ? `<img src="${item.gambar}" alt="gambar">` : ''}
+            </div>
+            <div class="actions">
+              <button onclick='editLayanan(${JSON.stringify(item)})'>Edit</button>
+              <button onclick='hapusLayanan("${item.id}")'>Hapus</button>
+            </div>
+          `;
+          list.appendChild(div);
+        });
+      } catch {
+        list.innerHTML += '<p>Gagal memuat data.</p>';
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
