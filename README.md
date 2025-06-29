@@ -1,1 +1,124 @@
-# -
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beranda - Cyru Store</title>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #333;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #222;
+    }
+    .kategori {
+      background-color: #f5f5f5;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .layanan-item {
+      position: relative;
+      margin: 10px 0;
+      padding: 15px;
+      background: #eaeaea;
+      border-radius: 10px;
+      color: #111;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.1s ease;
+    }
+    .layanan-item:hover {
+      transform: scale(1.01);
+    }
+    .layanan-item img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: ripple-animation 0.5s linear;
+      background-color: rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    .loading {
+      text-align: center;
+      color: #888;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Selamat Datang di Cyru Store</h1>
+  <h2>Daftar Layanan</h2>
+  <div id="layanan-container"></div>
+  <div class="loading" id="loading">Memuat layanan...</div>
+
+  <script>
+    async function loadLayanan() {
+      const response = await fetch('https://api.sheetbest.com/sheets/a5f0fdbf-c847-4094-a937-d4fb70b65366');
+      const data = await response.json();
+
+      const container = document.getElementById('layanan-container');
+      const loading = document.getElementById('loading');
+      container.innerHTML = '';
+      loading.style.display = 'none';
+
+      const grouped = {};
+      data.forEach(item => {
+        if (!grouped[item.kategori]) grouped[item.kategori] = [];
+        grouped[item.kategori].push(item);
+      });
+
+      for (let kategori in grouped) {
+        const kategoriDiv = document.createElement('div');
+        kategoriDiv.classList.add('kategori');
+        kategoriDiv.innerHTML = `<h3>${kategori}</h3>`;
+
+        grouped[kategori].forEach(item => {
+          const layananDiv = document.createElement('div');
+          layananDiv.classList.add('layanan-item');
+          layananDiv.innerHTML = `
+            <strong>${item.nama}</strong><br>
+            Rp${parseInt(item.harga).toLocaleString()}
+            ${item.gambar ? `<img src="${item.gambar}" alt="${item.nama}">` : ''}
+          `;
+
+          // Tambah efek ripple saat klik
+          layananDiv.addEventListener('click', function (e) {
+            const circle = document.createElement('span');
+            circle.classList.add('ripple');
+            const rect = layananDiv.getBoundingClientRect();
+            circle.style.left = `${e.clientX - rect.left}px`;
+            circle.style.top = `${e.clientY - rect.top}px`;
+            layananDiv.appendChild(circle);
+            setTimeout(() => circle.remove(), 600);
+          });
+
+          kategoriDiv.appendChild(layananDiv);
+        });
+
+        container.appendChild(kategoriDiv);
+      }
+    }
+
+    loadLayanan();
+  </script>
+</body>
+</html>
