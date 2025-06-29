@@ -1,42 +1,33 @@
-<!DOCTYPE html>
-<html lang="id">
+<!DOCTYPE html><html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login Admin - Cyru Store</title>
+  <title>Admin - Login & Kelola Layanan</title>
   <style>
     body {
-      background: linear-gradient(135deg, #7f5af0, #2cb67d);
       font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #7f5af0, #2cb67d);
       color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      padding: 20px;
       margin: 0;
     }
-    .login-box {
+    .container {
+      max-width: 700px;
+      margin: auto;
       background: #0f0e17dd;
-      padding: 30px;
+      padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      width: 100%;
-      max-width: 400px;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
     }
     input, button {
       width: 100%;
       padding: 12px;
-      margin: 10px 0;
+      margin: 8px 0;
       border-radius: 6px;
       border: none;
       font-size: 16px;
     }
     input {
-      background: #fff;
+      background: #f0f0f0;
       color: #000;
     }
     button {
@@ -45,40 +36,196 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .reset-button {
+      background: gray;
+    }
     .status {
       text-align: center;
       margin-top: 10px;
       color: yellow;
     }
+    .service-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .service-details {
+      flex: 1;
+    }
+    .service-details img {
+      max-width: 100px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    .actions button {
+      margin: 5px 5px 0 0;
+      background: #f25f4c;
+    }
+    .actions button:hover {
+      background: red;
+    }
+    #login-section {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="login-box">
+  <div class="container" id="login-section">
     <h2>Login Admin</h2>
     <input type="text" id="username" placeholder="Username" />
     <input type="password" id="password" placeholder="Password" />
     <button onclick="login()">Masuk</button>
-    <div class="status" id="status"></div>
-  </div>
+    <div class="status" id="login-status"></div>
+  </div>  <div class="container" id="admin-section" style="display: none;">
+    <h2>Tambah / Edit Layanan Cyru Store</h2>
+    <input type="text" id="id" placeholder="ID Layanan (misal: RAFFIRAS)" />
+    <input type="text" id="kategori" placeholder="Kategori (misal: Panel-Privat)" required />
+    <input type="text" id="nama" placeholder="Nama Layanan" required />
+    <input type="number" id="harga" placeholder="Harga (misal: 10000)" required />
+    <input type="text" id="gambar" placeholder="URL Gambar (opsional)" />
+    <button onclick="kirimData()" id="mainBtn">Tambah Layanan</button>
+    <button onclick="resetForm()" class="reset-button">Batal</button>
+    <button onclick="logout()" class="reset-button">Logout</button>
+    <div class="status" id="status"></div><div class="service-list" id="serviceList">
+  <h2 style="margin-top: 30px;">Daftar Layanan</h2>
+</div>
 
-  <script>
-    const adminAccount = {
-      username: "admin",
-      password: "cyru123" // Ganti sesuai keinginan
-    };
+  </div>  <script>
+    const SHEET_URL = 'https://api.sheetbest.com/sheets/a5f0fdbf-c847-4094-a937-d4fb70b65366';
+    const adminUser = 'admin';
+    const adminPass = 'cyru123';
+    let editMode = false;
+    let editId = null;
+
+    if (localStorage.getItem("adminLoggedIn") === "true") {
+      document.getElementById("admin-section").style.display = "block";
+    } else {
+      document.getElementById("login-section").style.display = "block";
+    }
 
     function login() {
       const user = document.getElementById('username').value.trim();
       const pass = document.getElementById('password').value.trim();
-      const status = document.getElementById('status');
-
-      if (user === adminAccount.username && pass === adminAccount.password) {
+      if (user === adminUser && pass === adminPass) {
         localStorage.setItem("adminLoggedIn", "true");
-        window.location.href = "admin.html";
+        location.reload();
       } else {
-        status.innerText = "Username atau password salah!";
+        document.getElementById('login-status').innerText = 'Username atau password salah';
       }
     }
-  </script>
-</body>
+
+    function logout() {
+      localStorage.removeItem("adminLoggedIn");
+      location.reload();
+    }
+
+    async function kirimData() {
+      const id = document.getElementById('id').value.trim() || Date.now().toString();
+      const kategori = document.getElementById('kategori').value.trim();
+      const nama = document.getElementById('nama').value.trim();
+      const harga = document.getElementById('harga').value.trim();
+      const gambar = document.getElementById('gambar').value.trim();
+      const data = { id, kategori, nama, harga, gambar };
+
+      if (!kategori || !nama || !harga) {
+        document.getElementById('status').innerText = 'Mohon lengkapi data wajib.';
+        return;
+      }
+
+      try {
+        const res = await fetch(editMode ? `${SHEET_URL}?id=${encodeURIComponent(editId)}` : SHEET_URL, {
+          method: editMode ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        document.getElementById('status').innerText = res.ok ? 
+          (editMode ? 'Layanan diperbarui!' : 'Layanan ditambahkan!') : 'Terjadi kesalahan';
+        resetForm();
+        loadData();
+      } catch {
+        document.getElementById('status').innerText = 'Terjadi kesalahan jaringan.';
+      }
+    }
+
+    function editLayanan(item) {
+      document.getElementById('id').value = item.id;
+      document.getElementById('kategori').value = item.kategori;
+      document.getElementById('nama').value = item.nama;
+      document.getElementById('harga').value = item.harga;
+      document.getElementById('gambar').value = item.gambar;
+      document.getElementById('mainBtn').innerText = "Simpan Perubahan";
+      document.getElementById('status').innerText = `Sedang mengedit ID: ${item.id}`;
+      editMode = true;
+      editId = item.id;
+    }
+
+    function resetForm() {
+      document.getElementById('id').value = '';
+      document.getElementById('kategori').value = '';
+      document.getElementById('nama').value = '';
+      document.getElementById('harga').value = '';
+      document.getElementById('gambar').value = '';
+      document.getElementById('mainBtn').innerText = "Tambah Layanan";
+      document.getElementById('status').innerText = '';
+      editMode = false;
+      editId = null;
+    }
+
+    async function hapusLayanan(id) {
+      if (!confirm("Hapus layanan ini?")) return;
+      try {
+        const res = await fetch(`${SHEET_URL}?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          alert("Berhasil dihapus!");
+          loadData();
+        } else {
+          alert("Gagal menghapus.");
+        }
+      } catch {
+        alert("Kesalahan jaringan.");
+      }
+    }
+
+    async function loadData() {
+      const list = document.getElementById('serviceList');
+      list.innerHTML = '<h2>Daftar Layanan</h2>';
+      try {
+        const res = await fetch(SHEET_URL);
+        const data = await res.json();
+        if (data.length === 0) {
+          list.innerHTML += '<p>Belum ada layanan.</p>';
+          return;
+        }
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'service-item';
+          div.innerHTML = `
+            <div class="service-details">
+              <strong>${item.kategori}</strong><br>
+              ${item.nama} - Rp${item.harga}<br>
+              ${item.gambar ? `<img src="${item.gambar}" alt="gambar">` : ''}
+            </div>
+            <div class="actions">
+              <button onclick='editLayanan(${JSON.stringify(item)})'>Edit</button>
+              <button onclick='hapusLayanan("${item.id}")'>Hapus</button>
+            </div>
+          `;
+          list.appendChild(div);
+        });
+      } catch {
+        list.innerHTML += '<p>Gagal memuat data.</p>';
+      }
+    }
+
+    if (localStorage.getItem("adminLoggedIn") === "true") {
+      loadData();
+    }
+  </script></body>
 </html>
