@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -80,7 +81,9 @@
     <input type="password" id="password" placeholder="Password" />
     <button onclick="login()">Masuk</button>
     <div class="status" id="login-status"></div>
-  </div>  <div class="container" id="admin-section" style="display: none;">
+  </div>
+
+  <div class="container" id="admin-section" style="display: none;">
     <h2>Tambah / Edit Layanan Cyru Store</h2>
     <input type="text" id="id" placeholder="ID Layanan (misal: RAFFIRAS)" />
     <input type="text" id="kategori" placeholder="Kategori (misal: Panel-Privat)" required />
@@ -90,19 +93,24 @@
     <button onclick="kirimData()" id="mainBtn">Tambah Layanan</button>
     <button onclick="resetForm()" class="reset-button">Batal</button>
     <button onclick="logout()" class="reset-button">Logout</button>
-    <div class="status" id="status"></div><div class="service-list" id="serviceList">
-  <h2 style="margin-top: 30px;">Daftar Layanan</h2>
-</div>
+    <div class="status" id="status"></div>
 
-  </div>  <script>
+    <div class="service-list" id="serviceList">
+      <h2 style="margin-top: 30px;">Daftar Layanan</h2>
+    </div>
+  </div>
+
+  <script>
     const SHEET_URL = 'https://api.sheetbest.com/sheets/a5f0fdbf-c847-4094-a937-d4fb70b65366';
     const adminUser = 'admin';
     const adminPass = 'cyru123';
     let editMode = false;
     let editId = null;
 
+    // Cek login
     if (localStorage.getItem("adminLoggedIn") === "true") {
       document.getElementById("admin-section").style.display = "block";
+      loadData();
     } else {
       document.getElementById("login-section").style.display = "block";
     }
@@ -137,7 +145,7 @@
       }
 
       try {
-        const res = await fetch(editMode ? `${SHEET_URL}?id=${encodeURIComponent(editId)}` : SHEET_URL, {
+        const res = await fetch(editMode ? `${SHEET_URL}/id/${encodeURIComponent(editId)}` : SHEET_URL, {
           method: editMode ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
@@ -179,7 +187,7 @@
     async function hapusLayanan(id) {
       if (!confirm("Hapus layanan ini?")) return;
       try {
-        const res = await fetch(`${SHEET_URL}?id=${encodeURIComponent(id)}`, {
+        const res = await fetch(`${SHEET_URL}/id/${encodeURIComponent(id)}`, {
           method: 'DELETE'
         });
         if (res.ok) {
@@ -223,9 +231,6 @@
         list.innerHTML += '<p>Gagal memuat data.</p>';
       }
     }
-
-    if (localStorage.getItem("adminLoggedIn") === "true") {
-      loadData();
-    }
-  </script></body>
+  </script>
+</body>
 </html>
